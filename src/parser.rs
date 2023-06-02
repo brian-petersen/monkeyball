@@ -1,5 +1,5 @@
 use crate::{
-    ast::{Identifier, LetStatement, Program, Statement},
+    ast::{Identifier, LetStatement, Program, ReturnStatement, Statement},
     lexer::Lexer,
     token::{Token, TokenType},
 };
@@ -78,9 +78,23 @@ impl<'a> Parser<'a> {
         Some(LetStatement { name })
     }
 
+    fn parse_return_statement(&mut self) -> Option<ReturnStatement> {
+        self.next_token();
+
+        // TODO expressions parsing
+        while !self.current_token_is(TokenType::Semicolon) {
+            self.next_token();
+        }
+
+        Some(ReturnStatement {})
+    }
+
     fn parse_statement(&mut self) -> Option<Statement> {
-        match self.current_token.get_type() {
-            &TokenType::Let => self.parse_let_statement().map(Statement::LetStatement),
+        match *self.current_token.get_type() {
+            TokenType::Let => self.parse_let_statement().map(Statement::LetStatement),
+            TokenType::Return => self
+                .parse_return_statement()
+                .map(Statement::ReturnStatement),
             _ => None,
         }
     }
@@ -124,7 +138,7 @@ let 838383;
     }
 
     #[test]
-    fn test_next_token_basic() {
+    fn test_let_statements() {
         let input = "let x = 5;
 let y = 10;
 let foobar = 838383;
@@ -134,8 +148,40 @@ let foobar = 838383;
 
         assert!(errors.is_empty());
 
-        println!("{:#?}", program);
+        let ids: Vec<String> = program
+            .get_statements()
+            .iter()
+            .filter_map(|s| match s {
+                Statement::LetStatement(LetStatement { name }) => Some(name),
+                statement => panic!("Expected a LetStatement, got {:?}", statement),
+            })
+            .map(|i| i.value.to_string())
+            .collect();
 
-        assert!(false);
+        assert_eq!(ids, ["x", "y", "foobar"]);
+    }
+
+    #[test]
+    fn test_return_statements() {
+        let input = "return 5;
+return 10;
+return 993322;
+";
+        let lexer = Lexer::new(input);
+        let (program, errors) = Parser::new(lexer).parse_program();
+
+        assert!(errors.is_empty());
+
+        let todo: Vec<()> = program
+            .get_statements()
+            .iter()
+            .filter_map(|s| match s {
+                // TODO expressions parsing
+                Statement::ReturnStatement(ReturnStatement {}) => Some(()),
+                statement => panic!("Expected a ReturnStatement, got {:?}", statement),
+            })
+            .collect();
+
+        assert_eq!(todo.len(), 3);
     }
 }

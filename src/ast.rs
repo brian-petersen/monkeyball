@@ -20,6 +20,7 @@ impl Program {
 #[derive(Debug)]
 pub enum Statement {
     LetStatement(LetStatement),
+    ReturnStatement(ReturnStatement),
 }
 
 #[derive(Debug)]
@@ -27,6 +28,12 @@ pub struct LetStatement {
     pub name: Identifier,
     // TODO expressions parsing
     // pub value: Box<dyn Expression>,
+}
+
+#[derive(Debug)]
+pub struct ReturnStatement {
+    // TODO expressions parsing
+    // pub return_value: Expression,
 }
 
 #[derive(Debug)]

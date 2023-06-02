@@ -1,6 +1,6 @@
 use crate::token::{Token, TokenType};
 
-struct Lexer<'a> {
+pub struct Lexer<'a> {
     input: &'a [u8],
     position: usize,
     read_position: usize,
@@ -112,6 +112,19 @@ impl<'a> Lexer<'a> {
     fn skip_whitespace(&mut self) {
         while [b' ', b'\t', b'\n', b'\r'].contains(&self.char) {
             self.read_char();
+        }
+    }
+}
+
+impl Iterator for Lexer<'_> {
+    type Item = Token;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let token = self.next_token();
+
+        match token.token_type() {
+            TokenType::Eof => None,
+            _ => Some(token),
         }
     }
 }

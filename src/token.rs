@@ -61,4 +61,8 @@ impl Token {
     pub fn new(r#type: TokenType, literal: String) -> Self {
         Self { r#type, literal }
     }
+
+    pub fn token_type(&self) -> &TokenType {
+        &self.r#type
+    }
 }

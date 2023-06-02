@@ -122,7 +122,7 @@ impl Iterator for Lexer<'_> {
     fn next(&mut self) -> Option<Self::Item> {
         let token = self.next_token();
 
-        match token.token_type() {
+        match token.get_type() {
             TokenType::Eof => None,
             _ => Some(token),
         }

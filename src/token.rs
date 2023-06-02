@@ -10,7 +10,7 @@ pub enum TokenType {
     Plus,
     Minus,
     Bang,
-    Asterik,
+    Asterisk,
     Slash,
 
     Lt,

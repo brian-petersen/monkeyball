@@ -11,6 +11,10 @@ impl Program {
     pub fn add_statement(&mut self, statement: Statement) {
         self.statements.push(statement);
     }
+
+    pub fn get_statements(&self) -> &Vec<Statement> {
+        &self.statements
+    }
 }
 
 #[derive(Debug)]

@@ -5,9 +5,9 @@ use crate::{
 };
 
 pub struct Parser<'a> {
-    lexer: Lexer<'a>,
-
     current_token: Token,
+    errors: Vec<String>,
+    lexer: Lexer<'a>,
     peek_token: Token,
 }
 
@@ -17,13 +17,14 @@ impl<'a> Parser<'a> {
         let peek_token = lexer.next_token();
 
         Self {
-            lexer,
             current_token,
+            errors: vec![],
+            lexer,
             peek_token,
         }
     }
 
-    pub fn parse_program(mut self) -> Program {
+    pub fn parse_program(mut self) -> (Program, Vec<String>) {
         let mut program = Program::new();
 
         while self.current_token.get_type() != &TokenType::Eof {
@@ -34,18 +35,19 @@ impl<'a> Parser<'a> {
             self.next_token();
         }
 
-        program
+        (program, self.errors)
     }
 
     fn current_token_is(&self, r#type: TokenType) -> bool {
         self.current_token.get_type() == &r#type
     }
 
-    fn expect_peek(&mut self, r#type: TokenType) -> bool {
-        if self.peek_token_is(r#type) {
+    fn expect_peek(&mut self, expected_type: TokenType) -> bool {
+        if self.peek_token_is(&expected_type) {
             self.next_token();
             true
         } else {
+            self.peek_error(&expected_type);
             false
         }
     }
@@ -83,8 +85,16 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn peek_token_is(&self, r#type: TokenType) -> bool {
-        self.peek_token.get_type() == &r#type
+    fn peek_error(&mut self, expected_token: &TokenType) {
+        self.errors.push(format!(
+            "expected next token to be {:?}, got {:?} instead",
+            expected_token,
+            self.peek_token.get_type()
+        ));
+    }
+
+    fn peek_token_is(&self, r#type: &TokenType) -> bool {
+        self.peek_token.get_type() == r#type
     }
 }
 
@@ -93,13 +103,36 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_parse_program_errors() {
+        let input = "let x 5;
+let = 10;
+let 838383;
+";
+        let lexer = Lexer::new(input);
+        let (program, errors) = Parser::new(lexer).parse_program();
+
+        assert!(program.get_statements().is_empty());
+
+        assert_eq!(
+            errors,
+            [
+                "expected next token to be Assign, got Integer instead",
+                "expected next token to be Identifier, got Assign instead",
+                "expected next token to be Identifier, got Integer instead",
+            ]
+        );
+    }
+
+    #[test]
     fn test_next_token_basic() {
         let input = "let x = 5;
 let y = 10;
 let foobar = 838383;
 ";
         let lexer = Lexer::new(input);
-        let program = Parser::new(lexer).parse_program();
+        let (program, errors) = Parser::new(lexer).parse_program();
+
+        assert!(errors.is_empty());
 
         println!("{:#?}", program);
 
